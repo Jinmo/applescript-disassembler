@@ -1,4 +1,4 @@
-## Scriptabble
+## AppleScript disassembler
 
 Run-only applescript reversing. This is disassembler for that.
 
@@ -8,8 +8,5 @@ To write disassembler I reversed vm routine, file format (fas, uas) in applescri
 
 - disassembler.py uses fasparser.py to parse format and extract literal table & code and disassemble it.
 - fasparser.py parses compiled scpt file. If it's compiled without -x (run only mode), it would have error on cmdBlock parsing, for now.
-- example/apple.scpt is example scpt file.
-- example/disas.txt is disassembled apple.scpt file.
-- example/solve.py is flag-generation related routine of `example/apple.scpt` ported to python, and it works fastly in PyPy.
 
-** WARNING: ** It only implemented parts used in `examples/apple.scpt`.
+** WARNING: ** It may have some unimplemented parts. Please make an issue for that if you liked it!
