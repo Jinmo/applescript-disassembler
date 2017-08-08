@@ -1,4 +1,4 @@
-## AppleScript disassembler
+# AppleScript disassembler
 
 Run-only applescript reversing. This is disassembler for that.
 
