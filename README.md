@@ -6,7 +6,7 @@ Run-only applescript reversing. This is disassembler for that.
 
 To write disassembler I reversed vm routine, file format (fas, uas) in applescript binary.
 
-### download
+### Download and "install"
 
 ```shell
 mkdir -p /opt/dev
