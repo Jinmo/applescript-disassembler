@@ -10,7 +10,7 @@ To write disassembler I reversed vm routine, file format (fas, uas) in applescri
 
 ```shell
 chmod +x disassembler.py
-disassembler.py <<scpt file>>
+disassembler.py <<scpt_file>>
 ```
 
 - disassembler.py uses fasparser.py to parse format and extract literal table & code and disassemble it.
