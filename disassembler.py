@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 from engine.definitions import opcodes, comments
 from engine.fasparser import load_file
 
