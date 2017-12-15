@@ -9,6 +9,7 @@ To write disassembler I reversed vm routine, file format (fas, uas) in applescri
 ### download
 
 ```shell
+mkdir -p /opt/dev
 cd /opt/dev
 git clone https://github.com/TyrfingMjolnir/applescript-disassembler
 cd applescript-disassembler
