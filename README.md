@@ -9,8 +9,8 @@ To write disassembler I reversed vm routine, file format (fas, uas) in applescri
 ### Download and "install"
 
 ```shell
-mkdir -p /opt/dev
-cd /opt/dev
+mkdir -p /opt/local/dev
+cd /opt/local/dev
 git clone https://github.com/TyrfingMjolnir/applescript-disassembler
 cd applescript-disassembler
 chmod +x disassembler.py
@@ -19,7 +19,7 @@ chmod +x disassembler.py
 ### Usage
 
 ```shell
-/opt/dev/applescript-disassembler/disassembler.py <<scpt_file>>
+/opt/local/dev/applescript-disassembler/disassembler.py <<scpt_file>>
 ```
 
 - disassembler.py uses fasparser.py to parse format and extract literal table & code and disassemble it.
