@@ -6,10 +6,18 @@ Run-only applescript reversing. This is disassembler for that.
 
 To write disassembler I reversed vm routine, file format (fas, uas) in applescript binary.
 
+### download
+
+```shell
+cd /opt/dev
+git clone https://github.com/TyrfingMjolnir/applescript-disassembler
+cd applescript-disassembler
+chmod +x disassembler.py
+```
+
 ### Usage
 
 ```shell
-chmod +x disassembler.py
 disassembler.py <<scpt_file>>
 ```
 
