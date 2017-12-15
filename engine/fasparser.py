@@ -108,7 +108,7 @@ def load_file(path):
 			b = read4()
 			v = a | (b << 32)
 			v = struct.pack(">Q", v & 0xffffffffffffffff)
-			constTable[v] = v
+			constIdTable[v] = v
 		elif c in [10, 47]:
 			a = read4()
 			v = struct.pack(">L", a & 0xffffffff)
