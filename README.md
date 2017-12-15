@@ -11,7 +11,7 @@ To write disassembler I reversed vm routine, file format (fas, uas) in applescri
 ```shell
 mkdir -p /opt/local/dev
 cd /opt/local/dev
-git clone https://github.com/TyrfingMjolnir/applescript-disassembler
+git clone https://github.com/Jinmo/applescript-disassembler
 cd applescript-disassembler
 chmod +x disassembler.py
 ```
