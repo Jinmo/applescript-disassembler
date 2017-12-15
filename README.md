@@ -18,7 +18,7 @@ chmod +x disassembler.py
 ### Usage
 
 ```shell
-disassembler.py <<scpt_file>>
+/opt/dev/applescript-disassembler/disassembler.py <<scpt_file>>
 ```
 
 - disassembler.py uses fasparser.py to parse format and extract literal table & code and disassemble it.
