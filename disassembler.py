@@ -141,7 +141,7 @@ def main():
         elif op == 'RepeatWhile':
             pass
         else:
-            print '<disassembler not implemented>',
+            print op + ' <disassembler not implemented>',
         print
 
 
