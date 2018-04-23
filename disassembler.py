@@ -10,7 +10,7 @@ import struct
 # Some hardcoded offset in apple script binary
 # root -> (data -> (literal, code))
 ROOT_OFFSET = -1
-DATA_OFFSET = 3
+DATA_OFFSET = 2
 LITERAL_OFFSET = 5
 CODE_OFFSET = 6
 
