@@ -1,6 +1,8 @@
-from engine.definitions import getSizeByIndex
 import struct
+import sys
 from pprint import pprint
+
+from engine.definitions import getSizeByIndex
 
 types = {
     1: 'symbol',
@@ -53,7 +55,7 @@ def load_file(path):
     classIdTable = {}
     eventIdTable = {}
     userIdTable = {}
-    literals = []
+    # literals = []
 
     # magic
     c = f.read(4)
@@ -84,7 +86,7 @@ def load_file(path):
         R = []
         for refId in r:
             R.append(findObject(refId))
-        literals.append(R)
+        # literals.append(R)
         return R
 
     def readValueBlock(id, size):
@@ -97,7 +99,7 @@ def load_file(path):
             else:
                 alloc = size + 1
             r = _readRefList(size)
-        literals.append(r)
+        # literals.append(r)
         return r
 
     def readSymbol(size):
@@ -105,12 +107,12 @@ def load_file(path):
             r = '<symbol>'
         else:
             r = read8()
-        literals.append(r)
+        # literals.append(r)
         return r
 
     def readUntypedPointerBlock(id, size):
         r = _readRefList(size)
-        literals.append(r)
+        # literals.append(r)
         return r
 
     def readCodeId(size):
@@ -130,7 +132,7 @@ def load_file(path):
             key = v[0] | (v[1] << 32)
             v = tuple(struct.pack(">L", x & 0xffffffff) for x in v)
             eventIdTable[key] = v
-        literals.append(v)
+        # literals.append(v)
         return v
 
     def readList(id, size):
@@ -172,7 +174,7 @@ def load_file(path):
 
     def readUntypedDataBlock(id, size):
         refMap[id] = f.read(size)
-        literals.append(refMap[id])
+        # literals.append(refMap[id])
         return refMap[id]
 
     def readUserId(size):
@@ -188,7 +190,7 @@ def load_file(path):
             v = b_s
         assert size == a + b + 4
         userIdTable[v] = a_s
-        literals.append(a_s)
+        # literals.append(a_s)
         return ':%s' % a_s
 
     def readCmdBlock(id, size):
@@ -219,15 +221,35 @@ def load_file(path):
                     exit()
             result = result, f.read(size - 94)
         refMap[id] = result
-        literals.append(result)
+        # literals.append(result)
         return result
+
+    def readRecord(id, size):
+        assert size in (1, 3)
+        if size == 3:
+            records = []
+            while size == 3:
+                A = read2()
+                B = read2()
+                C = read2()
+                objA = findObject(A)
+                objB = findObject(B)
+                objC = findObject(C, False)
+                if objC is None:
+                    index, ref, size = header = read_header()
+                    if index != 6:
+                        readObject(ref, reuse_header=header)
+            refMap[id] = records
+            return records
+        else:
+            return '<empty record>'
 
     def read_header():
         index = read1()
         realRef = read2()
         size = read2()
         obj = index, realRef, size
-        literals.append(obj)
+        # literals.append(obj)
         return obj
 
     def readObject(refIdExpected, reuse_header=None):
@@ -262,16 +284,18 @@ def load_file(path):
             data = readDataBlock(id, size)
         elif kind == 'cmdBlock':
             data = readCmdBlock(id, size)
+        elif kind == 'record':
+            data = readRecord(id, size)
         else:
             print kind, 'is not handled'
             exit()
         obj['data'] = data
         obj['id'] = id
-        literals.append(obj)
+        # literals.append(obj)
         return obj
 
     r = readObject(0)
-    # pprint(literals)
+    # pprint(# literals)
     # exit()
     return r
 

@@ -10,7 +10,7 @@ import struct
 # Some hardcoded offset in apple script binary
 # root -> (data -> (literal, code))
 ROOT_OFFSET = -1
-DATA_OFFSET = 2
+DATA_OFFSET = 3
 LITERAL_OFFSET = 5
 CODE_OFFSET = 6
 
@@ -22,7 +22,7 @@ def main():
     f = load_file(path)
 
     code = f['data'][ROOT_OFFSET]
-    assert code['kind'] == 'untypedPointerBlock'  # I think it doesn't matter
+    # assert code['kind'] == 'untypedPointerBlock'  # I think it doesn't matter
     data = code['data'][DATA_OFFSET]['data']
     literals = data[LITERAL_OFFSET]['data']
     code = bytearray(data[CODE_OFFSET])
@@ -93,6 +93,12 @@ def main():
             pass
         elif op == 'LessThan':
             pass
+        elif op == 'GreaterThan':
+            pass
+        elif op == 'Contains':
+            pass
+        elif op == 'Exit':
+            pass
         elif op == 'Power':
             pass
         elif op == 'Negate':
@@ -112,7 +118,7 @@ def main():
             pass
         elif op == 'Dup':
             pass
-        elif op == 'TestIf':
+        elif op in ('TestIf', 'And'):
             print hex(state['pos'] + word()),
         elif op == 'MessageSend':
             v = word()
@@ -141,6 +147,16 @@ def main():
         elif op == 'GreaterThanOrEqual':
             pass
         elif op == 'RepeatWhile':
+            pass
+        elif op == 'Pop':
+            pass
+        elif op == 'Quotient':
+            pass
+        elif op == 'DefineActor':
+            print hex(word()),
+        elif op == 'EndDefineActor':
+            pass
+        elif op == 'PushMinus1':
             pass
         else:
             print '<disassembler not implemented>',

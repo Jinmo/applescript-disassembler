@@ -255,8 +255,8 @@ PushLiteral
 PushLiteral
 PushLiteral'''.split('\n')
 
-
 opcodes_map = {x: i for i, x in enumerate(opcodes)}
+
 
 def getSizeByIndex(x):
     if x in [4,
