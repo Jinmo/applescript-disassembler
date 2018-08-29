@@ -19,7 +19,6 @@ CODE_OFFSET = 6
 
 
 def main():
-    state = {'pos': 0, 'tab': 0}
 
     path = sys.argv[1]
     f = load_file(path)
@@ -27,6 +26,7 @@ def main():
     root = f['data'][ROOT_OFFSET]
     # assert code['kind'] == 'untypedPointerBlock'  # I think it doesn't matter
     def disassemble(DATA_OFFSET): # function number
+        state = {'pos': 0, 'tab': 0}
         function = root['data'][DATA_OFFSET]['data']
         literals = function[LITERAL_OFFSET]['data']
         name = function[NAME_OFFSET]
