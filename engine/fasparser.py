@@ -47,6 +47,14 @@ def qword(x):
     return r
 
 
+class UserId(object):
+    def __init__(self, name):
+        self.name = name
+
+    def __repr__(self):
+        return ':%s' % repr(self.name)[1:-1]
+
+
 def load_file(path):
     f = open(path, 'rb')
     magic = ''
@@ -191,7 +199,7 @@ def load_file(path):
         assert size == a + b + 4
         userIdTable[v] = a_s
         # literals.append(a_s)
-        return ':%s' % a_s
+        return UserId(a_s)
 
     def readCmdBlock(id, size):
         x = read1()
@@ -257,6 +265,7 @@ def load_file(path):
             index, id, size = reuse_header
         else:
             index, id, size = read_header()
+        # print id, refIdExpected
         assert id == refIdExpected
         obj = {}
         obj['kind'] = kind = types[index]

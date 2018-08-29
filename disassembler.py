@@ -164,6 +164,17 @@ def main():
                 pass
             elif op == 'PushMinus1':
                 pass
+            elif op == 'MakeRecord':
+                pass
+            elif op == 'ErrorHandler':
+                print word(),
+                state['tab'] += 1
+            elif op == 'EndErrorHandler':
+                state['tab'] -= 1
+            elif op == 'StartsWith':
+                pass
+            elif op =='EndsWith':
+                pass
             else:
                 print '<disassembler not implemented>',
             print
