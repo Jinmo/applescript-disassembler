@@ -1,8 +1,10 @@
 from . import register
 from ..runtimeobjects import Binding, NIL
 
+
 class Record(object):
     pass
+
 
 @register(6)
 def load(table, id, size):

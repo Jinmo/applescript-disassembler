@@ -2,14 +2,17 @@ import struct
 import sys
 from pprint import pprint
 
-from engine.util import getSizeByIndex
 from engine.fasobjects import fastypes
 from engine.runtimeobjects import *
+from engine.util import getSizeByIndex
+
 
 # magic!
 class instancemethod:
     def method():
         pass
+
+
 instancemethod = type(instancemethod.method)
 
 types = {
@@ -174,10 +177,10 @@ class FasLoadTable(TRefTable):
 
         prevlen = len(stack)
         t(self, ref, inlined)
-        assert len(stack) == prevlen + 1, t.__module__ # little check
+        assert len(stack) == prevlen + 1, t.__module__  # little check
 
     def findObject(self, num, load=True):
-        if not load: # FindObjectNoLoad
+        if not load:  # FindObjectNoLoad
             if num >= 0:
                 exists, result = self.lookUpByRefId(num)
                 if exists:
@@ -187,7 +190,7 @@ class FasLoadTable(TRefTable):
                     return False
             else:
                 return False
-        else: # FindObject
+        else:  # FindObject
             if num < 0:
                 self.loadObject(num)
             else:
@@ -214,6 +217,7 @@ class FasLoadTable(TRefTable):
 class Stack(list):
     def push(self, x):
         self.append(x)
+
     pass
 
 
@@ -256,6 +260,7 @@ class Loader:
     def integer_reader(self, size, format):
         mask = 1 << (size * 8 - 1)
         format = ">%s" % format
+
         def reader(unpack=True):
             data = self.read(size)
             if not self.bigEndian:
@@ -296,6 +301,7 @@ class Loader:
         if key not in self.__context:
             self.__context[key] = Context()
         return self.__context[key]
+
 
 if __name__ == '__main__':
     # TODO: make below code work. it doesn't work in current because applescript-disassembler has no package for now

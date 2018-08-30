@@ -1,8 +1,8 @@
 from . import register
-
+from .util import TInferiorRefList
 from .. import runtimeobjects
 from ..util import getSizeByIndex
-from .util import TInferiorRefList
+
 
 @register(4)
 @register(14)

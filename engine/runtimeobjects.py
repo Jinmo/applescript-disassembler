@@ -9,6 +9,7 @@ def value(cls):
 class Value(object):
     def __repr__(self):
         return "<Value type=%d>" % self.type
+
     pass
 
 
@@ -38,6 +39,7 @@ class Special(Value):
 
     def __eq__(self, other):
         return isinstance(other, Special) and other.value == value
+
     pass
 
 
@@ -82,7 +84,8 @@ class Object(Value):
 
 @value
 class String(Value):
-    type = 0 # or 8?
+    type = 0  # or 8?
+
     def __init__(self, value):
         self.value = value
 
@@ -100,7 +103,7 @@ class Binding(Object):
     def __repr__(self):
         return "<Binding a=%r b=%r c=%r next=%r>" % (
             self.a, self.b, self.c, self.next
-            )
+        )
 
 
 class EmptyBinding(Binding):
@@ -117,6 +120,9 @@ class EventIdentifier(Value):
 
     def __init__(self, a, b, c, d, e, f):
         self.identifier = a, b, c, d, e, f
+
+    def __repr__(self):
+        return "<Value type=event_identifier value=%08x-%08x-%08x-%08x-%08x-%08x>" % self.identifier
 
 
 class Reference:

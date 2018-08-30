@@ -1,16 +1,14 @@
 #!/usr/bin/env python2
 
+import struct
+import sys
 from engine.definitions import opcodes, comments
+
 from engine.fasparser import Loader
 
-import sys
-import struct
-
-
 # Some hardcoded offset in apple script binary
-# root -> (data -> (literal, code))
+# root -> (<function index> -> (name, ..., literal, code))
 ROOT_OFFSET = -1
-DATA_OFFSET = 2
 
 # function object
 NAME_OFFSET = 0
@@ -19,16 +17,16 @@ CODE_OFFSET = 6
 
 
 def main():
-
     path = sys.argv[1]
     f = Loader()
     f = f.load(path)
 
     root = f[ROOT_OFFSET]
+
     # assert code['kind'] == 'untypedPointerBlock'  # I think it doesn't matter
-    def disassemble(DATA_OFFSET): # function number
+    def disassemble(function_offset):  # function number
         state = {'pos': 0, 'tab': 0}
-        function = root[DATA_OFFSET]
+        function = root[function_offset]
         if type(function) is not list or len(function) < 7:
             print "<not a function>"
             return
@@ -177,15 +175,15 @@ def main():
                 state['tab'] -= 1
             elif op == 'StartsWith':
                 pass
-            elif op =='EndsWith':
+            elif op == 'EndsWith':
                 pass
             else:
                 print '<disassembler not implemented>',
             print
 
-    for DATA_OFFSET in range(2, len(root)):
-        print '=== data offset %d ===' % DATA_OFFSET
-        disassemble(DATA_OFFSET)
+    for cur_function_offset in range(2, len(root)):
+        print '=== data offset %d ===' % cur_function_offset
+        disassemble(cur_function_offset)
 
 
 if __name__ == '__main__':
