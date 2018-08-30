@@ -2,7 +2,15 @@ import struct
 import sys
 from pprint import pprint
 
-from engine.definitions import getSizeByIndex
+from engine.util import getSizeByIndex
+from engine.fasobjects import fastypes
+from engine.runtimeobjects import *
+
+# magic!
+class instancemethod:
+    def method():
+        pass
+instancemethod = type(instancemethod.method)
 
 types = {
     1: 'symbol',
@@ -55,262 +63,243 @@ class UserId(object):
         return ':%s' % repr(self.name)[1:-1]
 
 
-def load_file(path):
-    f = open(path, 'rb')
-    magic = ''
-    refMap = {}
-    constIdTable = {}
-    classIdTable = {}
-    eventIdTable = {}
-    userIdTable = {}
-    # literals = []
+class TRefTable(object):
+    # This is weird class extending TGCStack and overriding some pointer-related fields.
+    # I think the interpreter has bug, but didn't investigate it yet.
+    def __init__(self):
+        # I think it does some kind of scope things:
+        # it seems to make a linked-list-ed vector to gSwitchedGlobals->refTable (offset 0x3E8)
+        self.allocate(32)
+        # self.field_14 = -1 <-- what?
 
-    # magic
-    c = f.read(4)
-    assert c == 'Fasd'
-    magic += c
-    c = f.read(4)
-    assert c == 'UAS '
-    c = f.read(4)
-    if c >= '1.10':
-        c = f.read(4)
-    assert '0.97' < c < '1.11'
+    def allocate(self, size):
+        self.refTable += [(nil, 6)] * size
 
-    def findObject(refId, load=True):
-        if refId < 0 or refId not in refMap:
-            if load:
-                refMap[refId] = readObject(refId)
-            else:
-                return None
-        return refMap[refId]
 
-    read1 = lambda: ord(f.read(1))
-    read2 = lambda: hword(f.read(2))
-    read4 = lambda: dword(f.read(4))
-    read8 = lambda: qword(f.read(8))
+class FasLoadTable(TRefTable):
+    def __init__(self, loader):
+        super(TRefTable, self).__init__()
+        self.depth = 0
 
-    def _readRefList(size):
-        r = [read2() for i in range(size)]
-        R = []
-        for refId in r:
-            R.append(findObject(refId))
-        # literals.append(R)
-        return R
+        # Some static fields in binary. See help(Loader.context) for mechanism.
+        # it's simply a keyed-storage with class name as key, like the binary did.
+        with loader.context(self) as context:
+            context.reuseHeader = False
+            context.index = None
+            context.realRef = None
 
-    def readValueBlock(id, size):
-        c = read1()
-        if size == 0 and c == 15:
-            r = []
-        else:
-            if c == 15:
-                alloc = getSizeByIndex(c)
-            else:
-                alloc = size + 1
-            r = _readRefList(size)
-        # literals.append(r)
-        return r
+            # TODO: how can I show these errors? It's errors with max 5 count
+            context.refErrors = []
 
-    def readSymbol(size):
-        if not size:
-            r = '<symbol>'
-        else:
-            r = read8()
-        # literals.append(r)
-        return r
+        self.loader = loader
+        self.field_38 = False  # don't know what it is for now
 
-    def readUntypedPointerBlock(id, size):
-        r = _readRefList(size)
-        # literals.append(r)
-        return r
-
-    def readCodeId(size):
-        c = read1()
-        if c == 11:
-            a = read4()
-            b = read4()
-            v = a | (b << 32)
-            v = struct.pack(">Q", v & 0xffffffffffffffff)
-            constIdTable[v] = v
-        elif c in [10, 47]:
-            a = read4()
-            v = struct.pack(">L", a & 0xffffffff)
-            classIdTable[a] = v
-        elif c == 46:
-            v = tuple([read4() for i in range(6)])
-            key = v[0] | (v[1] << 32)
-            v = tuple(struct.pack(">L", x & 0xffffffff) for x in v)
-            eventIdTable[key] = v
-        # literals.append(v)
-        return v
-
-    def readList(id, size):
-        cur = r = {'next': None, 'value': None}
-        if size == 2:
+        maybe_hashbang = loader.read(2)
+        if maybe_hashbang == '#!':
             while True:
-                a = read2()
-                b = read2()
-                value = findObject(a)
-                cur['value'] = value
-                if b < 0 or findObject(b, False) is None:
-                    index, realRef, _size = read_header()
-                    if types[index] != 'list':
-                        item = readObject(realRef, (index, realRef, _size))
-                        cur['next'] = {'value': item, 'next': None}
-                        break
-                    else:
-                        item = {'next': None}
-                        refMap[realRef] = item
-                        cur['next'] = item
-                        cur = cur['next']
-                    if _size != 2:
-                        break
-                else:
+                c = loader.read(1)
+                if c in ('\n', ''):
                     break
-            if _size != 0:
-                raise Exception('list size is not in 0, 2')
-            rlist = []
-            cur = r
-            while cur['next']:
-                rlist.append(cur['value'])
-                cur = cur['next']
-            refMap[id] = rlist
-            return rlist
+                loader = self.loader  # This line's ported from the binary. Beware of TOCTOU
+
         else:
-            if size != 0:
-                raise Exception('list initial size is not in 0, 2')
-            return []
+            loader.seek(-2)
 
-    def readUntypedDataBlock(id, size):
-        refMap[id] = f.read(size)
-        # literals.append(refMap[id])
-        return refMap[id]
+        # Fasd magic
+        c = loader.read_u32(False)
+        assert c == 'Fasd'
+        self.magic_fasd = c
 
-    def readUserId(size):
-        c = read1()
-        assert c == 48
-        a = read2()
-        a_s = f.read(a)
-        b = read2()
-        b_s = f.read(b)
-        if b == 0:
-            v = a_s
-        else:
-            v = b_s
-        assert size == a + b + 4
-        userIdTable[v] = a_s
-        # literals.append(a_s)
-        return UserId(a_s)
+        # UAS magic
+        c = loader.read_u32(False)
+        assert c == 'UAS '
+        self.magic_uas = c
 
-    def readCmdBlock(id, size):
-        x = read1()
-        a = read2()
-        b = read2()
-        c = read2()
-        data = _readRefList(size)
-        return x, a, b, c, data
+        c = loader.read_u32(False)
+        if c >= '1.10':
+            c = self.loader.read_u32(False)
+        if c <= '0.97':
+            raise Exception('File version too low: %r' % c)
+        if c >= '1.11':
+            raise Exception('File version too high: %r' % c)
+        if c <= '1.00':
+            self.field_38 = True
 
-    def readDataBlock(id, size):
-        c = read1()
-        if c != 8:
-            result = f.read(c)
-        else:
-            f.read(8)
-            f.read(4)
-            f.read(70)
-            a = f.read(4)
-            f.read(4)
-            typeCode = f.read(4)
-            if typeCode == 'alis':
-                result = ('alis', a)
+        self.refTable = [(NIL, 2)] * 32
+
+        self.version = c
+        pass
+
+    def loadObject(self, num):
+        loader = self.loader
+        with loader.context(self) as context:
+            pos = loader.f.tell()
+            if context.reuseHeader:
+                context.reuseHeader = False
             else:
-                if typeCode == 'targ':
-                    result = 'ppc://'
+                context.index, context.ref, context.inlined = self.readFasHeader()
+
+            self.depth += 1
+            out = ' '.join(repr(x) for x in (hex(pos) + ' idx:%d' % context.index, context.ref, context.inlined))
+            if context.ref == num:
+                self.loadObjectBody(num, context.index, context.inlined)
+            else:
+                err = "%08x: AppleScript: Error while loading script, RefID doesn't match. Expected %d, found %d." % (
+                    pos, num, context.ref)
+                context.reuseHeader = True
+                print >> sys.stdout, err
+                context.refErrors.append(err)
+                if len(context.refErrors) >= 6:
+                    raise Exception("AppleScript: Too many RefID errors.")
+                loader.stack.push(NIL)
+            self.depth -= 1
+
+    def readFasHeader(self):
+        index = ord(self.loader.read(1))
+        ref = self.loader.read_s16()
+        inlined = self.loader.read_u16(True)
+        return index, ref, inlined
+
+    def loadObjectBody(self, ref, index, inlined):
+        # loader.stack.reserve(20)
+        stack = self.loader.stack
+
+        t = fastypes.get(index)
+
+        if t is None:
+            raise Exception('Error -1702: unknown object type: %d!' % index)
+
+        if index in (2, 7, 10, 11):
+            ref = 0  # not used in binary
+
+        prevlen = len(stack)
+        t(self, ref, inlined)
+        assert len(stack) == prevlen + 1, t.__module__ # little check
+
+    def findObject(self, num, load=True):
+        if not load: # FindObjectNoLoad
+            if num >= 0:
+                exists, result = self.lookUpByRefId(num)
+                if exists:
+                    self.loader.stack.push(result)
+                    return True
                 else:
-                    exit()
-            result = result, f.read(size - 94)
-        refMap[id] = result
-        # literals.append(result)
-        return result
+                    return False
+            else:
+                return False
+        else: # FindObject
+            if num < 0:
+                self.loadObject(num)
+            else:
+                exists, result = self.lookUpByRefId(num)
+                if exists:
+                    self.loader.stack.push(result)
+                else:
+                    self.loadObject(num)
 
-    def readRecord(id, size):
-        assert size in (1, 3)
-        if size == 3:
-            records = []
-            while size == 3:
-                A = read2()
-                B = read2()
-                C = read2()
-                objA = findObject(A)
-                objB = findObject(B)
-                objC = findObject(C, False)
-                if objC is None:
-                    index, ref, size = header = read_header()
-                    if index != 6:
-                        readObject(ref, reuse_header=header)
-            refMap[id] = records
-            return records
-        else:
-            return '<empty record>'
+    def lookUpByRefId(self, num):
+        if num >= len(self.refTable):
+            return False, None
+        value, type = self.refTable[num]
+        return type in (14, 30), value
 
-    def read_header():
-        index = read1()
-        realRef = read2()
-        size = read2()
-        obj = index, realRef, size
-        # literals.append(obj)
-        return obj
+    def registerObject(self, id, value):
+        if id < 0:
+            return
+        if id >= len(self.refTable):
+            self.refTable += [(NIL, NIL)] * (id - len(self.refTable) + 1)
+        self.refTable[id] = (value, 30)
 
-    def readObject(refIdExpected, reuse_header=None):
-        if reuse_header:
-            index, id, size = reuse_header
-        else:
-            index, id, size = read_header()
-        # print id, refIdExpected
-        assert id == refIdExpected
-        obj = {}
-        obj['kind'] = kind = types[index]
-        if kind == 'valueBlock2':
-            data = readValueBlock(id, size)
-        elif kind == 'symbol':
-            data = readSymbol(size)
-        elif kind == 'untypedPointerBlock':
-            data = readUntypedPointerBlock(id, size)
-        elif kind == 'codeId':
-            data = readCodeId(size)
-        elif kind == 'list':
-            data = readList(id, size)
-        elif kind == 'untypedDataBlock':
-            return readUntypedDataBlock(id, size)
-        elif kind == 'int':
-            return size
-        elif kind == 'long':
-            return read4()
-        elif kind == 'float':
-            data = struct.unpack(">d", f.read(8))[0]
-        elif kind == 'userId':
-            return readUserId(size)
-        elif kind == 'dataBlock':
-            data = readDataBlock(id, size)
-        elif kind == 'cmdBlock':
-            data = readCmdBlock(id, size)
-        elif kind == 'record':
-            data = readRecord(id, size)
-        else:
-            print kind, 'is not handled'
-            exit()
-        obj['data'] = data
-        obj['id'] = id
-        # literals.append(obj)
-        return obj
 
-    r = readObject(0)
-    # pprint(# literals)
-    # exit()
-    return r
+class Stack(list):
+    def push(self, x):
+        self.append(x)
+    pass
 
+
+class Context:
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
+class Loader:
+    """
+    port of FasLoad, wraps TBasicInputStream.
+    Original version of AppleScript uses global variable for it, and I use class for separating file contexts.
+    """
+
+    def __init__(self):
+        """
+        You can just call Loader() without any arguments.
+        loader = Loader()
+        loader.load(file)
+        """
+        self.stack = None
+        self.bigEndian = None
+
+        # Some internal stuffs
+        self.__context = {}
+
+        integer_reader = self.integer_reader
+        self.read_u64, self.read_s64 = integer_reader(8, 'Q')
+        self.read_u32, self.read_s32 = integer_reader(4, 'L')
+        self.read_u16, self.read_s16 = integer_reader(2, 'H')
+        self.read_u8, self.read_s8 = integer_reader(1, 'B')
+        pass
+
+    def integer_reader(self, size, format):
+        mask = 1 << (size * 8 - 1)
+        format = ">%s" % format
+        def reader(unpack=True):
+            data = self.read(size)
+            if not self.bigEndian:
+                data = data[::-1]
+            if unpack:
+                return struct.unpack(format, data)[0]
+            else:
+                return data
+
+        def signed_reader():
+            num = reader(True)
+            if num & mask:
+                return num - mask * 2
+            else:
+                return num
+
+        return (reader, signed_reader)
+
+    def load(self, path):
+        self.f = f = open(path, 'rb')
+
+        self.bigEndian = True
+        self.stack = Stack()
+        self.loadTable = FasLoadTable(self)
+
+        self.loadTable.loadObject(0)
+        return self.stack.pop()
+
+    def read(self, size):
+        return self.f.read(size)
+
+    def seek(self, pos, set=1):
+        return self.f.seek(pos, set)
+
+    def context(self, key):
+        if not isinstance(key, str):
+            key = key.__class__.__name__
+        if key not in self.__context:
+            self.__context[key] = Context()
+        return self.__context[key]
 
 if __name__ == '__main__':
     # TODO: make below code work. it doesn't work in current because applescript-disassembler has no package for now
     # If run as script, it'll cause error in importing "engine.*".
     path = sys.argv[1]
-    pprint(load_file(path))
+    loader = Loader()
+    pprint(loader.load(path))

@@ -382,6 +382,7 @@ ConstMap = {
     0x7A2: 'true',
     0x792: 'false',
     0x002: 'null',
+    # i dont know these yet, but used in AppleScript binary
     0x3A2: None,
     0x702: None
 }

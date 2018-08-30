@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 
 from engine.definitions import opcodes, comments
-from engine.fasparser import load_file
+from engine.fasparser import Loader
 
 import sys
 import struct
@@ -21,17 +21,21 @@ CODE_OFFSET = 6
 def main():
 
     path = sys.argv[1]
-    f = load_file(path)
+    f = Loader()
+    f = f.load(path)
 
-    root = f['data'][ROOT_OFFSET]
+    root = f[ROOT_OFFSET]
     # assert code['kind'] == 'untypedPointerBlock'  # I think it doesn't matter
     def disassemble(DATA_OFFSET): # function number
         state = {'pos': 0, 'tab': 0}
-        function = root['data'][DATA_OFFSET]['data']
-        literals = function[LITERAL_OFFSET]['data']
-        name = function[NAME_OFFSET]
+        function = root[DATA_OFFSET]
+        if type(function) is not list or len(function) < 7:
+            print "<not a function>"
+            return
+        literals = function[LITERAL_OFFSET + 1]
+        name = function[NAME_OFFSET + 1]
         print 'Function name :', name
-        code = bytearray(function[CODE_OFFSET])
+        code = bytearray(function[CODE_OFFSET + 1].value)
 
         def word():
             r = struct.unpack(">H", code[state['pos']:state['pos'] + 2])[0]
@@ -179,7 +183,7 @@ def main():
                 print '<disassembler not implemented>',
             print
 
-    for DATA_OFFSET in range(2, len(root['data'])):
+    for DATA_OFFSET in range(2, len(root)):
         print '=== data offset %d ===' % DATA_OFFSET
         disassemble(DATA_OFFSET)
 
