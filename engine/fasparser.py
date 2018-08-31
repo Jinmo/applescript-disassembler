@@ -37,27 +37,6 @@ types = {
 }
 
 
-def hword(x):
-    r = struct.unpack(">H", x)[0]
-    if r > 0x8000:
-        r -= 0x10000
-    return r
-
-
-def dword(x):
-    r = struct.unpack(">L", x)[0]
-    if r > 0x80000000:
-        r -= 2 ** 32
-    return r
-
-
-def qword(x):
-    r = struct.unpack(">Q", x)[0]
-    if r > 0x8000000000000000:
-        r -= 2 ** 64
-    return r
-
-
 class UserId(object):
     def __init__(self, name):
         self.name = name
