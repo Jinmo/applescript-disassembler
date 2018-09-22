@@ -2,7 +2,7 @@
 
 import struct
 import sys
-from engine.definitions import opcodes, comments
+from engine.util import opcodes, comments
 
 from engine.fasparser import Loader
 
@@ -39,12 +39,13 @@ def main():
         args = function[ARGS_OFFSET + 1]
         print 'Function name :', name
         print 'Function arguments: ',
+
         _args = []
         if isinstance(args, list) and len(args) >= 3 and isinstance(args[2], list):
             print args[2][1:]
             _args = args[2][1:]
         else:
-            print '<null or unknown>'
+            print '<empty or unknown>'
         code = bytearray(function[CODE_OFFSET + 1].value)
 
         def word():

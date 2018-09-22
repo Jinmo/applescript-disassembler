@@ -1,3 +1,5 @@
+import struct
+
 value_types = {}
 
 
@@ -122,7 +124,8 @@ class EventIdentifier(Value):
         self.identifier = a, b, c, d, e, f
 
     def __repr__(self):
-        return "<Value type=event_identifier value=%08x-%08x-%08x-%08x-%08x-%08x>" % self.identifier
+        return "<Value type=event_identifier value=%r-%r-%r-%r-%r-%r>" % \
+            tuple([struct.pack(">L", x) for x in self.identifier])
 
 
 class Reference:
