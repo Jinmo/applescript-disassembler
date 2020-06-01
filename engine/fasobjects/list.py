@@ -10,10 +10,10 @@ def loadList(table, id, size):
             a = table.loader.read_s16()
             b = table.loader.read_s16()
             table.findObject(a)
-            cur.first = stack.pop()
+            cur.first = table.loader.stack.pop()
             if table.findObject(b, False):
                 break
-            _index, size, _ref = table.readFasHeader()
+            _index, _ref, size = table.readFasHeader()
             if _index != 2:
                 table.loadObjectBody(_ref, _index, size)
                 cur.second = table.stack.pop()

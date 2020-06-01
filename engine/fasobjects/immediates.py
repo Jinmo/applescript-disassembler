@@ -25,4 +25,11 @@ def read_longint(table, id, inlined):
 def read_float(table, id, inlined):
     if inlined != 8:
         raise Exception('Error -1702: Float size error')
-    table.loader.stack.push(struct.unpack(">d", table.loader.read_u64(False))[0])
+    table.loader.stack.push(struct.unpack(
+        ">d", table.loader.read_u64(False))[0])
+
+
+@register(12)
+def read_string(table, id, inlined):
+    table.loader.stack.push(Object(UnicodeText(bytes(table.loader.read(
+        table.loader.read_u16())), bytes(table.loader.read(table.loader.read_u16())))))

@@ -37,7 +37,9 @@ class Special(Value):
         self.value = value
 
     def __repr__(self):
-        return ("<Value type=special value=%s>" % Special.KNOWN_CONSTANTS.get(self.value, 'unknown_0x%x' % self.value))
+        return "<Value type=special value=%s>" % \
+            Special.KNOWN_CONSTANTS.get(
+                self.value, 'unknown_0x%x' % self.value)
 
     def __eq__(self, other):
         return isinstance(other, Special) and other.value == value
@@ -144,7 +146,8 @@ class Pair(Value):
         self.first, self.second = first, second
 
     def __repr__(self):
-        return "<Value type=pair first=%r second=%r>" % (self.first, self.second)
+        return "<Value type=pair first=%r second=%r>" % \
+            (self.first, self.second)
 
 
 class EmptyPair(Pair):
@@ -155,7 +158,31 @@ class EmptyPair(Pair):
         return "<Value type=pair empty>"
 
 
+class Statement:
+    def __init__(self, type_info, bytecode_start, bytecode_end):
+        self.type_info = type_info
+        self.bytecode_start, self.bytecode_end = bytecode_start, bytecode_end
+        self.children=None
+
+    def __repr__(self):
+        return "<Statement type_info=%r bytecode_start=%r bytecode_end=%r children=%r>" % \
+            (self.type_info, self.bytecode_start, self.bytecode_end, self.children)
+
+    def set_children(self, children):
+        self.children=children
+
+
 secondActor = Reference('secondActor')
+
+
+class UnicodeText:
+    def __init__(self, text, style):
+        self.text = text
+        self.style = style
+
+    def __repr__(self):
+        return "<UnicodeText text=%r style=%r>" % \
+            (self.text, self.style)
 
 
 def parse_value(type, value):

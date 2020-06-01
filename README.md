@@ -23,7 +23,7 @@ disassembler.py <<scpt_file>>
 ```
 
 - disassembler.py uses fasparser.py to parse format and extract literal table & code and disassemble it.
-- fasparser.py parses compiled scpt file. If it's compiled without -x (run only mode), it would have error on cmdBlock parsing, for now.
+- fasparser.py parses compiled scpt file. `<Statement>` block represents command block, which is saved when `-x` option is not specified when the script is compiled.
 
 #### File parser
 

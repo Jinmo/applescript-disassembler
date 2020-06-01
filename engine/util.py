@@ -1,3 +1,4 @@
+from __future__ import print_function
 opcodes = '''Equal
 NotEqual
 GreaterThan
@@ -403,4 +404,4 @@ if __name__ == '__main__':
     for i in range(256):
         if opcodes[i] == 'None':
             opcodes[i] = ''
-        print '%02x' % i, opcodes[i]
+        print('%02x' % i, opcodes[i])

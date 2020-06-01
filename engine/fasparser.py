@@ -1,3 +1,4 @@
+from __future__ import print_function
 import struct
 import sys
 from pprint import pprint
@@ -89,22 +90,22 @@ class FasLoadTable(TRefTable):
 
         # Fasd magic
         c = loader.read_u32(False)
-        assert c == 'Fasd'
+        assert c == b'Fasd'
         self.magic_fasd = c
 
         # UAS magic
         c = loader.read_u32(False)
-        assert c == 'UAS '
+        assert c == b'UAS '
         self.magic_uas = c
 
         c = loader.read_u32(False)
-        if c >= '1.10':
+        if c >= b'1.10':
             c = self.loader.read_u32(False)
-        if c <= '0.97':
+        if c <= b'0.97':
             raise Exception('File version too low: %r' % c)
-        if c >= '1.11':
+        if c >= b'1.11':
             raise Exception('File version too high: %r' % c)
-        if c <= '1.00':
+        if c <= b'1.00':
             self.field_38 = True
 
         self.refTable = [(NIL, 2)] * 32
@@ -129,7 +130,7 @@ class FasLoadTable(TRefTable):
                 err = "%08x: AppleScript: Error while loading script, RefID doesn't match. Expected %d, found %d." % (
                     pos, num, context.ref)
                 context.reuseHeader = True
-                print >> sys.stdout, err
+                print(err, file=sys.stdout)
                 context.refErrors.append(err)
                 if len(context.refErrors) >= 6:
                     raise Exception("AppleScript: Too many RefID errors.")

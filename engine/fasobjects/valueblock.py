@@ -22,3 +22,4 @@ def load(table, id, size):
         table.loader.stack.push(res)
 
     table.registerObject(id, table.loader.stack[-1])
+

@@ -1,5 +1,6 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
+from __future__ import print_function
 import struct
 import sys
 from engine.util import opcodes, comments
@@ -29,23 +30,23 @@ def main():
         state = {'pos': 0, 'tab': 0}
         function = root[function_offset]
         if type(function) is not list:
-            print "<not a function>"
+            print("<not a function>")
             return
         if len(function) < 7:
-            print "<maybe binding?>", function
+            print("<maybe binding?>", function)
             return
         literals = function[LITERAL_OFFSET + 1]
         name = function[NAME_OFFSET + 1]
         args = function[ARGS_OFFSET + 1]
-        print 'Function name :', name
-        print 'Function arguments: ',
+        print('Function name :', name)
+        print('Function arguments: ', end=' ')
 
         _args = []
         if isinstance(args, list) and len(args) >= 3 and isinstance(args[2], list):
-            print args[2][1:]
+            print(args[2][1:])
             _args = args[2][1:]
         else:
-            print '<empty or unknown>'
+            print('<empty or unknown>')
         code = bytearray(function[CODE_OFFSET + 1].value)
 
         def word():
@@ -64,39 +65,39 @@ def main():
             return '[var_%d]' % x
 
         while state['pos'] < len(code):
-            print " " * state['tab'] * 4, '%05x' % state['pos'],
+            print(" " * state['tab'] * 4, '%05x' % state['pos'], end=' ')
             c = code[state['pos']]
             state['pos'] += 1
             op = opcodes[c]
-            print op,
+            print(op, end=' ')
             # print ops for each instruction
             if op == 'Jump':
-                print hex(state['pos'] + word()),
+                print(hex(state['pos'] + word()), end=' ')
             elif op == 'PushLiteral':
-                print c & 0xf, '#', literal(c & 0xf),
+                print(c & 0xf, '#', literal(c & 0xf), end=' ')
             elif op == 'PushLiteralExtended':
                 v = word()
-                print v, '#', literal(v),
+                print(v, '#', literal(v), end=' ')
             elif op in ['Push0', 'Push1', 'Push2', 'Push3']:
                 pass
             elif op == 'PushIt':
                 pass
             elif op == 'PushGlobal':
                 v = literal(c & 0xf)
-                print v,
+                print(v, end=' ')
             elif op == 'PushGlobalExtended':
                 v = literal(word())
-                print v,
+                print(v, end=' ')
             elif op == 'PopGlobal':
-                print literal(c & 0xf),
+                print(literal(c & 0xf), end=' ')
             elif op == 'PopGlobalExtended':
-                print literal(word()),
+                print(literal(word()), end=' ')
             elif op == 'PopVariable':
-                print variable(c & 0xf, True),
+                print(variable(c & 0xf, True), end=' ')
             elif op == 'PopVariableExtended':
-                print variable(word(), True),
+                print(variable(word(), True), end=' ')
             elif op == 'Tell':
-                print word(),
+                print(word(), end=' ')
                 state['tab'] += 1
             elif op == 'Subtract':
                 pass
@@ -129,12 +130,12 @@ def main():
             elif op == 'PushUndefined':
                 pass
             elif op == 'PushVariable':
-                print variable(c & 0xf, True),
+                print(variable(c & 0xf, True), end=' ')
             elif op == 'PushVariableExtended':
-                print variable(word(), True)
+                print(variable(word(), True))
             elif op in ['MakeObjectAlias', 'MakeComp']:
                 t = c - 23
-                print t, '# ' + comments.get(t, '<Unknown>')
+                print(t, '# ' + comments.get(t, '<Unknown>'))
             elif op == 'SetData':
                 pass
             elif op == 'GetData':
@@ -142,23 +143,23 @@ def main():
             elif op == 'Dup':
                 pass
             elif op in ('TestIf', 'And'):
-                print hex(state['pos'] + word()),
+                print(hex(state['pos'] + word()), end=' ')
             elif op == 'MessageSend':
                 v = word()
-                print v, '#', literal(v),
+                print(v, '#', literal(v), end=' ')
             elif op == 'StoreResult':
                 pass
             elif op == 'PositionalMessageSend':
                 v = word()
-                print v, '#', literal(v),
+                print(v, '#', literal(v), end=' ')
             elif op == 'LinkRepeat':
                 v = word() + state['pos']
-                print hex(v)
+                print(hex(v))
             elif op == 'EndTell':
                 state['tab'] -= 1
                 pass
             elif op == 'RepeatInRange':
-                print word(),
+                print(word(), end=' ')
             elif op == 'Return':
                 pass
             elif op == 'MakeVector':
@@ -176,7 +177,7 @@ def main():
             elif op == 'Quotient':
                 pass
             elif op == 'DefineActor':
-                print hex(word()),
+                print(hex(word()), end=' ')
             elif op == 'EndDefineActor':
                 pass
             elif op == 'PushMinus1':
@@ -184,7 +185,7 @@ def main():
             elif op == 'MakeRecord':
                 pass
             elif op == 'ErrorHandler':
-                print word(),
+                print(word(), end=' ')
                 state['tab'] += 1
             elif op == 'EndErrorHandler':
                 state['tab'] -= 1
@@ -193,21 +194,21 @@ def main():
             elif op == 'EndsWith':
                 pass
             elif op == 'PushParentVariable':
-                print word(), variable(word()),
+                print(word(), variable(word()), end=' ')
             elif op == 'PopParentVariable':
-                print word(), variable(word()),
+                print(word(), variable(word()), end=' ')
             else:
-                print '<disassembler not implemented>',
-            print
+                print('<disassembler not implemented>', end=' ')
+            print()
 
     for cur_function_offset in range(2, len(root)):
-        print '=== data offset %d ===' % cur_function_offset
+        print('=== data offset %d ===' % cur_function_offset)
         disassemble(cur_function_offset)
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print 'Usage: python disassembler.py [apple script-compiled .scpt file]'
+        print('Usage: python disassembler.py [apple script-compiled .scpt file]')
         exit()
 
     main()
