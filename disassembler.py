@@ -105,6 +105,8 @@ def main():
                 pass
             elif op == 'Equal':
                 pass
+            elif op == 'NotEqual':
+                pass
             elif op == 'Concatenate':
                 pass
             elif op == 'Remainder':
@@ -133,7 +135,7 @@ def main():
                 print(variable(c & 0xf, True), end=' ')
             elif op == 'PushVariableExtended':
                 print(variable(word(), True))
-            elif op in ['MakeObjectAlias', 'MakeComp']:
+            elif op in ('MakeObjectAlias', 'MakeComp'):
                 t = c - 23
                 print(t, '# ' + comments.get(t, '<Unknown>'))
             elif op == 'SetData':
@@ -185,10 +187,13 @@ def main():
             elif op == 'MakeRecord':
                 pass
             elif op == 'ErrorHandler':
-                print(word(), end=' ')
+                print(state['pos'] + word(), end=' ')
                 state['tab'] += 1
             elif op == 'EndErrorHandler':
+                print(state['pos'] + word(), end=' ')
                 state['tab'] -= 1
+            elif op == 'HandleError':
+                print(word(), word(), end=' ')
             elif op == 'StartsWith':
                 pass
             elif op == 'EndsWith':
@@ -197,6 +202,8 @@ def main():
                 print(word(), variable(word()), end=' ')
             elif op == 'PopParentVariable':
                 print(word(), variable(word()), end=' ')
+            elif op == 'GetResult':
+                pass
             else:
                 print('<disassembler not implemented>', end=' ')
             print()
