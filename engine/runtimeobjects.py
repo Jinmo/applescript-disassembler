@@ -1,3 +1,22 @@
+"""
+Known type index:
+0x01: Constant
+0x02: List
+0x03: Integer
+0x05: Float
+0x07: Integer
+0x08: Application
+0x0A: ClassIdentifier
+0x0B: Constant
+0x0C: LargeFloat
+0x0D: RawData
+0x0F: Actor
+0x2E: EventIdentifier
+0x6C: Comment
+0x6E: Value
+0xB1: UnicodeText
+"""
+
 import struct
 
 value_types = {}
@@ -175,8 +194,10 @@ class Statement:
 secondActor = Reference('secondActor')
 
 
-class UnicodeText:
-    def __init__(self, text, style):
+class UnicodeText(Value):
+    type = 0xB1
+
+    def __init__(self, text, style=None):
         self.text = text
         self.style = style
 
@@ -185,9 +206,9 @@ class UnicodeText:
             (self.text, self.style)
 
 
-def parse_value(type, value):
+def parse_value(type, *value):
     t = value_types.get(type)
-    return t(value)
+    return t(*value)
 
 
 kUASIndexClassIdentifier = 0x0A

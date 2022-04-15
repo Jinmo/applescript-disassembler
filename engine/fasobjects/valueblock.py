@@ -19,7 +19,8 @@ def load(table, id, size):
         refloader.set_table(table)
         refloader.readRefs()
         res = refloader.doLoad()
+        # TODO: c is type index; use runtimeobjects to parse them?
+        res[0] = c
         table.loader.stack.push(res)
 
     table.registerObject(id, table.loader.stack[-1])
-
