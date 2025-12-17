@@ -23,7 +23,7 @@ value_types = {}
 
 
 def value(cls):
-    value_types[cls.type] = value
+    value_types[cls.type] = cls
     return cls
 
 
@@ -114,6 +114,17 @@ class String(Value):
 
     def __repr__(self):
         return "<Value type=string value=%r>" % self.value
+
+
+@value
+class RawData(Value):
+    type = 0x0D  # kUASIndexRawData = 0x0D
+
+    def __init__(self, value):
+        self.value = value
+
+    def __repr__(self):
+        return "<Value type=rawdata value=%r>" % self.value
 
 
 class Binding(Object):
@@ -208,6 +219,8 @@ class UnicodeText(Value):
 
 def parse_value(type, *value):
     t = value_types.get(type)
+    if t is None:
+        raise ValueError(f"No class registered for type {type}")
     return t(*value)
 
 

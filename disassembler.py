@@ -55,7 +55,7 @@ def main():
             return r - 0x10000 if r & 0x8000 else r
 
         def literal(x):
-            if x >= len(literals):
+            if x < 0 or x >= len(literals):
                 return '[L%d]' % x
             return literals[x]
 
